@@ -10,7 +10,7 @@ export default function FavoritesPage() {
       <p className="text-eyebrow text-ink-soft mb-2">Your collection</p>
       <h1 className="text-h2 mb-8">Favorites</h1>
       {favorites.length === 0 ? (
-        <p className="text-ink-soft">Nothing saved yet — hit the heart on any album or song.</p>
+        <p className="text-ink-soft">Nothing saved yet. Hit the heart on any album or song.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
           {favorites.map((item) => (

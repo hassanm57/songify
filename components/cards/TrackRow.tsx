@@ -114,7 +114,7 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
 
       {/* Price */}
       <span className="text-xs font-bold text-pop tabular-nums flex-shrink-0 w-10 text-right">
-        {track.price ? formatPrice(track.price) : "—"}
+        {track.price ? formatPrice(track.price) : ""}
       </span>
 
       {/* Favorite */}

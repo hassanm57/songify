@@ -10,7 +10,7 @@ export function Footer() {
             Song<span className="text-pop">i</span>fy
           </p>
           <p className="text-ink-soft text-sm max-w-xs leading-relaxed">
-            The latest music from global charts — beautifully presented, ready to buy.
+            The latest music from global charts, beautifully presented and ready to buy.
           </p>
           {/* Decorative newsletter */}
           <div className="mt-6 flex gap-2">

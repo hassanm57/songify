@@ -70,7 +70,7 @@ export function Hero({ featured }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            Discover and own the songs &amp; albums defining the moment — from global charts, live.
+            Discover and own the songs &amp; albums defining the moment, pulled live from global charts.
           </motion.p>
 
           <motion.div
@@ -126,7 +126,7 @@ export function Hero({ featured }: Props) {
               >
                 <span className="w-2 h-2 rounded-full bg-pop animate-pulse flex-shrink-0" />
                 <span className="text-xs font-bold truncate max-w-[160px]">{featured.name}</span>
-                <span className="text-xs text-ink-soft flex-shrink-0">— {featured.artistName}</span>
+                <span className="text-xs text-ink-soft flex-shrink-0">by {featured.artistName}</span>
               </motion.div>
 
               {/* Decorative tag */}
@@ -144,19 +144,21 @@ export function Hero({ featured }: Props) {
         )}
       </div>
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator (arrow only) */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.6 }}
       >
-        <span className="text-eyebrow text-ink-soft">Scroll</span>
         <motion.div
           animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-px h-8 bg-gradient-to-b from-ink-soft to-transparent"
-        />
+          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="text-ink-soft">
+            <path d="M5 8L10 13L15 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </motion.div>
       </motion.div>
     </section>
   );

@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Puritan, Geist_Mono } from "next/font/google";
+import { Figtree, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/context/PlayerProvider";
 import { FavoritesProvider } from "@/context/FavoritesProvider";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { TopBar } from "@/components/layout/TopBar";
+import { PlayerBar } from "@/components/player/PlayerBar";
 
-const puritan = Puritan({
-  variable: "--font-puritan",
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
-  weight: ["400", "700"],
-  style: ["normal", "italic"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Songify — The latest music, beautifully.",
+  title: "Songify - The latest music, beautifully.",
   description: "Discover and buy the latest songs, albums, and artists. Fresh charts, beautifully presented.",
 };
 
@@ -35,13 +35,9 @@ const noFlashScript = `
 })();
 `;
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${puritan.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${figtree.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
       </head>
@@ -50,9 +46,10 @@ export default function RootLayout({
           <PlayerProvider>
             <SmoothScroll>
               <TopBar />
-              <main className="pt-14">
+              <main className="pt-14 pb-24">
                 {children}
               </main>
+              <PlayerBar />
             </SmoothScroll>
           </PlayerProvider>
         </FavoritesProvider>

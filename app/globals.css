@@ -7,7 +7,7 @@
 /* ─── Songify design tokens ──────────────────────────────────────────────── */
 @theme inline {
   /* Font */
-  --font-sans: var(--font-puritan);
+  --font-sans: var(--font-figtree);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-puritan);
 
