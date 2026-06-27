@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/context/FavoritesProvider";
 import { usePlayer } from "@/context/PlayerProvider";
+import { useReceipt, makePurchasedItem } from "@/context/ReceiptProvider";
 import { formatDuration, formatPrice } from "@/lib/format";
 import type { Track } from "@/types";
 
@@ -35,6 +36,7 @@ type Props = {
 export function TrackRow({ track, index, queue = [], className }: Props) {
   const { isFavorite, toggle } = useFavorites();
   const player = usePlayer();
+  const { initiateCheckout } = useReceipt();
   const fav = isFavorite(track.id);
   const isActive = player.currentTrack?.id === track.id;
 
@@ -98,7 +100,7 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
         </p>
         <p className="text-xs text-ink-soft truncate mt-0.5">
           <Link
-            href={`/artists/${track.artistId}`}
+            href={`/artists?id=${track.artistId}`}
             onClick={(e) => e.stopPropagation()}
             className="hover:underline hover:text-foreground transition-colors"
           >
@@ -112,10 +114,17 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
         {formatDuration(track.durationMs)}
       </span>
 
-      {/* Price */}
-      <span className="text-xs font-bold text-pop tabular-nums flex-shrink-0 w-10 text-right">
-        {track.price ? formatPrice(track.price) : ""}
-      </span>
+      {/* Buy */}
+      <div className="flex-shrink-0 w-16 text-right" onClick={(e) => e.stopPropagation()}>
+        {track.price ? (
+          <button
+            onClick={() => initiateCheckout(makePurchasedItem({ id: track.id, name: track.name, artistName: track.artistName, artwork: track.artwork, price: track.price, currency: track.currency }, "track"))}
+            className="text-xs font-bold text-pop tabular-nums opacity-0 group-hover:opacity-100 hover:underline transition-opacity"
+          >
+            {formatPrice(track.price)}
+          </button>
+        ) : null}
+      </div>
 
       {/* Favorite */}
       <button

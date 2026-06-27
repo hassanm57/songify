@@ -39,7 +39,7 @@ export function AlbumCard({ album, queue = [], className }: Props) {
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       className={cn("group flex flex-col cursor-pointer select-none", className)}
     >
-      <Link href={`/albums/${album.id}`} className="block">
+      <Link href={`/albums?id=${album.id}`} className="block">
         {/* Artwork */}
         <div className="relative overflow-hidden rounded-[0.375rem] aspect-[3/4] bg-elevated">
           <img

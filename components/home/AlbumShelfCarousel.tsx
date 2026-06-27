@@ -94,7 +94,7 @@ export function AlbumShelfCarousel({ albums }: Props) {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="flex-none overflow-hidden rounded-lg cursor-pointer"
               >
-                <Link href={`/albums/${album.id}`} tabIndex={isCenter ? 0 : -1}>
+                <Link href={`/albums?id=${album.id}`} tabIndex={isCenter ? 0 : -1}>
                   <div className={cn("relative overflow-hidden rounded-lg", isCenter ? "aspect-square" : "aspect-[1/3]")}>
                     <img
                       src={album.artwork}

@@ -38,5 +38,5 @@ export type Artist = {
 
 export type PlayerTrack = Pick<
   Track,
-  "id" | "name" | "artistName" | "artwork" | "previewUrl" | "albumName"
+  "id" | "name" | "artistName" | "artwork" | "previewUrl" | "albumName" | "albumId"
 >;

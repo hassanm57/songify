@@ -3,9 +3,11 @@ import { Figtree, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/context/PlayerProvider";
 import { FavoritesProvider } from "@/context/FavoritesProvider";
+import { ReceiptProvider } from "@/context/ReceiptProvider";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { TopBar } from "@/components/layout/TopBar";
 import { PlayerBar } from "@/components/player/PlayerBar";
+import { ReceiptModal } from "@/components/commerce/ReceiptModal";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -44,13 +46,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-background text-foreground antialiased">
         <FavoritesProvider>
           <PlayerProvider>
-            <SmoothScroll>
-              <TopBar />
-              <main className="pt-14 pb-24">
-                {children}
-              </main>
-              <PlayerBar />
-            </SmoothScroll>
+            <ReceiptProvider>
+              <SmoothScroll>
+                <TopBar />
+                <main className="pt-14 pb-24">
+                  {children}
+                </main>
+                <PlayerBar />
+                <ReceiptModal />
+              </SmoothScroll>
+            </ReceiptProvider>
           </PlayerProvider>
         </FavoritesProvider>
       </body>

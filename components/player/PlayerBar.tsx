@@ -78,7 +78,7 @@ export function PlayerBar() {
 
             {/* Left: artwork + track info */}
             <div className="flex items-center gap-3 w-56 flex-shrink-0 min-w-0">
-              <Link href={`/albums/${currentTrack.albumName}`} className="flex-shrink-0">
+              <Link href={`/albums?id=${currentTrack.albumId}`} className="flex-shrink-0">
                 <img
                   src={currentTrack.artwork}
                   alt={currentTrack.albumName}

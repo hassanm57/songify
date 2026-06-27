@@ -108,7 +108,7 @@ export function Hero({ featured }: Props) {
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               className="relative"
             >
-              <Link href={`/albums/${featured.id}`}>
+              <Link href={`/albums?id=${featured.id}`}>
                 <img
                   src={featured.artwork}
                   alt={featured.name}

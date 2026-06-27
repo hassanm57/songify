@@ -5,14 +5,14 @@ import { Hero } from "@/components/home/Hero";
 import { AlbumRail, SongRail } from "@/components/home/GenreRail";
 import { ShowcaseGrid } from "@/components/home/ShowcaseGrid";
 import { AlbumShelfCarousel } from "@/components/home/AlbumShelfCarousel";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { DesktopSidebar, MobileGenreBar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
 import { useTopAlbums, useTopSongs } from "@/lib/hooks/useCharts";
 
 export default function Home() {
   const [selectedGenre, setSelectedGenre] = useState("All");
   const { data: albums, loading: albumsLoading } = useTopAlbums(50);
-  const { data: songs, loading: songsLoading } = useTopSongs(50);
+  const { data: songs,  loading: songsLoading  } = useTopSongs(50);
 
   const featured = albums[0] ?? null;
 
@@ -30,15 +30,13 @@ export default function Home() {
     <>
       <Hero featured={featured} />
 
-      {/* Mobile genre chips */}
-      <Sidebar selectedGenre={selectedGenre} onSelectGenre={setSelectedGenre} />
+      {/* Mobile-only chip bar — sits above the rails, hidden on desktop */}
+      <MobileGenreBar selectedGenre={selectedGenre} onSelectGenre={setSelectedGenre} />
 
-      {/* Sidebar + rails layout */}
+      {/* Sidebar + rails — desktop sidebar is inside the flex row */}
       <div className="flex max-w-[1600px] mx-auto w-full">
-        {/* Desktop sidebar */}
-        <Sidebar selectedGenre={selectedGenre} onSelectGenre={setSelectedGenre} />
+        <DesktopSidebar selectedGenre={selectedGenre} onSelectGenre={setSelectedGenre} />
 
-        {/* Main rails */}
         <div className="flex-1 min-w-0 px-6 lg:px-10 pt-10">
           <AlbumRail
             eyebrow="Global charts"
@@ -68,12 +66,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Full-width showcase */}
       <ShowcaseGrid albums={albums} />
-
-      {/* Kurosawa-style shelf */}
       <AlbumShelfCarousel albums={albums} />
-
       <Footer />
     </>
   );
