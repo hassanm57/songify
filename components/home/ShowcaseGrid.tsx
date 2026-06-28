@@ -20,12 +20,12 @@ export function ShowcaseGrid({ albums }: Props) {
   const headerOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
 
   // Use live album artwork; fall back to curated images only if all are empty
-  const liveImages = albums
-    .slice(0, 12)
-    .map((a) => a.artwork)
-    .filter(Boolean) as string[];
+  const liveAlbums = albums.slice(0, 12).filter((a) => a.artwork);
+  const liveImages = liveAlbums.map((a) => a.artwork) as string[];
+  const liveLinks = liveAlbums.map((a) => `/albums?id=${a.id}`);
 
   const images = liveImages.length >= 4 ? liveImages : undefined; // undefined → DEFAULT_GRID_IMAGES
+  const links = liveImages.length >= 4 ? liveLinks : undefined;
 
   return (
     <section ref={sectionRef} className="relative overflow-hidden border-t border-hairline">
@@ -49,6 +49,7 @@ export function ShowcaseGrid({ albums }: Props) {
 
       <ScrollTiltedGrid
         images={images ?? [...DEFAULT_GRID_IMAGES]}
+        links={links}
         maxWidth="2xl"
         gap={8}
         maxTilt={65}

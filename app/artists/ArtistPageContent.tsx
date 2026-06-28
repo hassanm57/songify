@@ -123,14 +123,16 @@ export function ArtistPageContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.4 }}
           >
-            <Link
-              href={artist.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-ink-soft hover:text-foreground transition-colors underline underline-offset-2"
-            >
-              Apple Music profile
-            </Link>
+            {artist.url ? (
+              <Link
+                href={artist.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-ink-soft hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                Apple Music profile
+              </Link>
+            ) : null}
             {albums.length > 0 && (
               <span className="text-sm text-ink-soft">
                 {albums.length} release{albums.length !== 1 ? "s" : ""}

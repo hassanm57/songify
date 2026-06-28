@@ -9,8 +9,7 @@ export function ThemeToggle() {
 
   useEffect(() => {
     const stored = localStorage.getItem("songify:theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = stored ? stored === "dark" : prefersDark;
+    const isDark = stored === "dark";
     setDark(isDark);
     document.documentElement.classList.toggle("dark", isDark);
     setMounted(true);

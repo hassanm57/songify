@@ -5,56 +5,59 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 const BASE_PLACEHOLDERS = [
-  "Blinding Lights — The Weeknd",
-  "Anti-Hero — Taylor Swift",
-  "As It Was — Harry Styles",
-  "Heat Waves — Glass Animals",
-  "Levitating — Dua Lipa",
-  "Good 4 U — Olivia Rodrigo",
-  "drivers license — Olivia Rodrigo",
-  "STAY — The Kid LAROI",
-  "Watermelon Sugar — Harry Styles",
-  "Circles — Post Malone",
-  "Sunflower — Post Malone",
-  "Lucid Dreams — Juice WRLD",
-  "Thank U, Next — Ariana Grande",
-  "God's Plan — Drake",
-  "SICKO MODE — Travis Scott",
-  "Shape of You — Ed Sheeran",
-  "Despacito — Luis Fonsi",
-  "Montero — Lil Nas X",
-  "Uptown Funk — Mark Ronson",
-  "Shake It Off — Taylor Swift",
-  "Rolling in the Deep — Adele",
-  "Someone Like You — Adele",
-  "Bohemian Rhapsody — Queen",
+  // From current charts
+  "stupid song — Olivia Rodrigo",
   "Billie Jean — Michael Jackson",
-  "Thriller — Michael Jackson",
-  "Purple Rain — Prince",
-  "Hotel California — Eagles",
-  "Smells Like Teen Spirit — Nirvana",
-  "Sweet Child O Mine — Guns N Roses",
-  "Superstition — Stevie Wonder",
-  "AFTER HOURS — The Weeknd",
-  "MIDNIGHTS — Taylor Swift",
-  "Un Verano Sin Ti — Bad Bunny",
-  "SOUR — Olivia Rodrigo",
-  "PLANET HER — Doja Cat",
-  "CERTIFIED LOVER BOY — Drake",
-  "Mr. Morale & The Big Steppers — Kendrick Lamar",
-  "Happier Than Ever — Billie Eilish",
-  "Future Nostalgia — Dua Lipa",
-  "Fine Line — Harry Styles",
-  "ASTROWORLD — Travis Scott",
-  "IGOR — Tyler, the Creator",
-  "Chromakopia — Tyler, the Creator",
+  "hate that i made you love me — Ariana Grande",
+  "Beauty And A Beat — Justin Bieber, Nicki Minaj",
+  "SWIM — BTS",
+  "Dai Dai — Shakira, Burna Boy",
+  "the cure — Olivia Rodrigo",
+  "Babydoll — Dominic Fike",
+  "drop dead — Olivia Rodrigo",
+  "Earrings — Malcolm Todd",
+  "Beat It — Michael Jackson",
+  "honeybee — Hippo Campus",
+  // Billboard Hot 100 recent hits
+  "A Bar Song (Tipsy) — Shaboozey",
+  "Die With A Smile — Lady Gaga & Bruno Mars",
+  "Too Sweet — Hozier",
+  "Espresso — Sabrina Carpenter",
+  "Please Please Please — Sabrina Carpenter",
+  "Good Luck, Babe! — Chappell Roan",
+  "I Had Some Help — Post Malone ft. Morgan Wallen",
+  "Beautiful Things — Benson Boone",
+  "Not Like Us — Kendrick Lamar",
+  "Luther — Kendrick Lamar ft. SZA",
+  "Timeless — The Weeknd & Playboi Carti",
+  "APT. — Rose & Bruno Mars",
+  "That's So True — Gracie Abrams",
+  "BIRDS OF A FEATHER — Billie Eilish",
+  "lunch — Billie Eilish",
+  "Texas Hold Em — Beyonce",
+  "we cant be friends — Ariana Grande",
+  "Lose Control — Teddy Swims",
+  "Fortnight — Taylor Swift ft. Post Malone",
+  "Down Bad — Taylor Swift",
+  "Cruel Summer — Taylor Swift",
+  "suffer — Charlie xcx",
+  "360 — Charli XCX",
+  "Von Dutch — Charli XCX",
+  "i like the way you kiss me — Artemas",
+  "Stumblin In — Cyberhouse",
+  "CLOUDS — NF",
+  "Love You Next — Drake",
+  "Search & Rescue — Drake",
+  "Chemical — Post Malone",
+  "Stick Season — Noah Kahan",
+  "Outnumbered — Dermot Kennedy",
+  "Stargazing — Myles Smith",
+  "Wildfire — Cautious Clay",
+  "Saturn — SZA",
+  "Kill Bill — SZA",
+  "Snooze — SZA",
+  "Used — Jennifer Lopez & Cardi B",
   "GNX — Kendrick Lamar",
-  "Cowboy Carter — Beyonce",
-  "Eternal Sunshine — Ariana Grande",
-  "Short n Sweet — Sabrina Carpenter",
-  "hit me hard and soft — Billie Eilish",
-  "VULTURES 1 — Ye",
-  "For All The Dogs — Drake",
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -131,11 +134,11 @@ export function OrbSearch({ className }: Props) {
       <motion.div
         animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        className="flex items-center gap-3 px-4 py-3 bg-[#0A0A0A] rounded-full border border-transparent"
+        className="flex items-center gap-3 px-4 py-3 bg-background rounded-full border border-hairline transition-shadow"
         style={{
           boxShadow: isFocused
-            ? "0 0 0 2px #C8FF00, 0 16px 48px rgba(0,0,0,0.22)"
-            : "0 6px 30px rgba(0,0,0,0.16)",
+            ? "0 0 0 2px #C8FF00, 0 8px 24px rgba(0,0,0,0.1)"
+            : "0 2px 10px rgba(0,0,0,0.07)",
         }}
       >
         {/* Lime pulsing orb */}
@@ -157,7 +160,7 @@ export function OrbSearch({ className }: Props) {
           />
         </div>
 
-        <div className="w-px h-6 bg-[#2a2a2a] flex-shrink-0" />
+        <div className="w-px h-6 bg-hairline flex-shrink-0" />
 
         <input
           type="text"
@@ -167,7 +170,7 @@ export function OrbSearch({ className }: Props) {
           onBlur={() => setIsFocused(false)}
           placeholder={`${displayedText}${isTyping ? "|" : ""}`}
           aria-label="Search songs and albums"
-          className="flex-1 text-sm text-white placeholder-[#555] bg-transparent border-none outline-none font-light tracking-wide"
+          className="flex-1 text-sm text-foreground placeholder-ink-soft bg-transparent border-none outline-none font-light tracking-wide"
         />
 
         {value && (

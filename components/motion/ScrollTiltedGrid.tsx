@@ -8,6 +8,7 @@ import {
   useReducedMotion,
   cubicBezier,
 } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export const DEFAULT_GRID_IMAGES: readonly string[] = [
@@ -64,7 +65,7 @@ type TileConfig = {
   rounded: string;
 };
 
-function Tile({ src, side, config }: { src: string; side: Side; config: TileConfig }) {
+function Tile({ src, href, side, config }: { src: string; href?: string; side: Side; config: TileConfig }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress: p } = useScroll({
     target: ref,
@@ -91,33 +92,42 @@ function Tile({ src, side, config }: { src: string; side: Side; config: TileConf
 
   const filter = useMotionTemplate`blur(${blur}px) brightness(${bright}) contrast(${contrast})`;
 
+  const inner = (
+    <div className="relative w-full overflow-hidden" style={{ aspectRatio, borderRadius: rounded }}>
+      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${src}")` }} />
+    </div>
+  );
+
+  const animatedInner = (
+    <motion.div
+      className="relative w-full overflow-hidden will-change-[filter,transform]"
+      style={{ aspectRatio, borderRadius: rounded, filter, x: tx, y: ty, z: tz, rotate: rot, rotateX: rx, skewX: sk }}
+    >
+      <motion.div
+        className="absolute inset-0 bg-cover bg-center will-change-transform"
+        style={{ backgroundImage: `url("${src}")`, scaleY: innerSY, backfaceVisibility: "hidden" }}
+      />
+    </motion.div>
+  );
+
   if (reduce) {
     return (
       <figure ref={ref} className="relative z-10 m-0">
-        <div className="relative w-full overflow-hidden" style={{ aspectRatio, borderRadius: rounded }}>
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${src}")` }} />
-        </div>
+        {href ? <Link href={href} className="block">{inner}</Link> : inner}
       </figure>
     );
   }
 
   return (
     <motion.figure ref={ref} className="relative z-10 m-0" style={{ perspective, willChange: "transform" }}>
-      <motion.div
-        className="relative w-full overflow-hidden will-change-[filter,transform]"
-        style={{ aspectRatio, borderRadius: rounded, filter, x: tx, y: ty, z: tz, rotate: rot, rotateX: rx, skewX: sk }}
-      >
-        <motion.div
-          className="absolute inset-0 bg-cover bg-center will-change-transform"
-          style={{ backgroundImage: `url("${src}")`, scaleY: innerSY, backfaceVisibility: "hidden" }}
-        />
-      </motion.div>
+      {href ? <Link href={href} className="block">{animatedInner}</Link> : animatedInner}
     </motion.figure>
   );
 }
 
 export type ScrollTiltedGridProps = {
   images?: readonly string[];
+  links?: readonly string[];
   loop?: boolean;
   initialCycles?: number;
   aspectRatio?: string;
@@ -132,6 +142,7 @@ export type ScrollTiltedGridProps = {
 
 export function ScrollTiltedGrid({
   images = DEFAULT_GRID_IMAGES,
+  links,
   loop = false,
   initialCycles = 3,
   aspectRatio = "3/4",
@@ -163,6 +174,11 @@ export function ScrollTiltedGrid({
     [loop, cycles, images],
   );
 
+  const allLinks = useMemo(
+    () => loop ? Array.from({ length: cycles }, () => links ?? []).flat() : [...(links ?? [])],
+    [loop, cycles, links],
+  );
+
   const config = useMemo<TileConfig>(
     () => ({ aspectRatio, perspective, maxTilt, maxBlur, rounded }),
     [aspectRatio, perspective, maxTilt, maxBlur, rounded],
@@ -178,7 +194,7 @@ export function ScrollTiltedGrid({
     <section className={["relative w-full", className].filter(Boolean).join(" ")}>
       <div className={gridClass}>
         {items.map((src, i) => (
-          <Tile key={`${i}-${src}`} src={src} side={i % 2 === 0 ? "L" : "R"} config={config} />
+          <Tile key={`${i}-${src}`} src={src} href={allLinks[i]} side={i % 2 === 0 ? "L" : "R"} config={config} />
         ))}
       </div>
       {loop ? <div ref={sentinelRef} aria-hidden className="h-px w-full" /> : null}

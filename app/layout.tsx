@@ -30,8 +30,7 @@ const noFlashScript = `
 (function(){
   try{
     var t=localStorage.getItem('songify:theme');
-    var prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-    if(t==='dark'||(t===null&&prefersDark)){document.documentElement.classList.add('dark')}
+    if(t==='dark'){document.documentElement.classList.add('dark')}
   }catch(e){}
 })();
 `;

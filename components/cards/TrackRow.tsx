@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/context/FavoritesProvider";
 import { usePlayer } from "@/context/PlayerProvider";
@@ -36,6 +37,7 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
   const { isFavorite, toggle } = useFavorites();
   const player = usePlayer();
   const fav = isFavorite(track.id);
+  const [imgError, setImgError] = useState(false);
   const isActive = player.currentTrack?.id === track.id;
 
   const handlePlay = () => {
@@ -84,13 +86,13 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
       </div>
 
       {/* Artwork */}
-      {track.artwork ? (
+      {track.artwork && !imgError ? (
         <img
           src={track.artwork}
           alt={track.albumName}
           className="w-10 h-10 rounded object-cover flex-shrink-0"
           loading="lazy"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          onError={() => setImgError(true)}
         />
       ) : (
         <div className="w-10 h-10 rounded bg-elevated flex-shrink-0 flex items-center justify-center">

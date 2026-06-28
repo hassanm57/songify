@@ -12,16 +12,37 @@ const easeOut = [0.22, 1, 0.36, 1] as const;
 const wordVariants: Variants = {
   hidden: { opacity: 0, y: 40, skewY: 4 },
   visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    skewY: 0,
+    opacity: 1, y: 0, skewY: 0,
     transition: { delay: i * 0.1, duration: 0.7, ease: easeOut },
   }),
 };
 
 const HEADLINE = ["The", "latest,", "beautifully."];
 
+function BrowseIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
+      <rect x="0.5" y="8" width="3" height="5" rx="0.5" fill="currentColor" />
+      <rect x="5" y="4.5" width="3" height="8.5" rx="0.5" fill="currentColor" />
+      <rect x="9.5" y="0.5" width="3" height="12.5" rx="0.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M9 9L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 type Props = { featured: Album | null };
+
+// Album column width shared between the left spacer and the right album column
+// so text stays visually centered.
+const COL = "w-64 xl:w-80 flex-shrink-0";
 
 export function Hero({ featured }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
@@ -32,26 +53,34 @@ export function Hero({ featured }: Props) {
     offset: ["start start", "end start"],
   });
 
-  const imageY    = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, -90]);
-  const textY     = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, 50]);
+  const imageY       = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, -90]);
+  const textY        = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, 50]);
   const imageOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const blobY        = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const arrowOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[calc(100vh-3.5rem)] flex items-center px-6 lg:px-12 overflow-hidden"
+      className="relative min-h-[calc(100vh-3.5rem)] flex items-center overflow-hidden"
     >
-      {/* Lime glow blob — parallaxes subtly */}
+      {/* Lime glow blob */}
       <motion.div
         className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full opacity-[0.04] blur-3xl bg-pop pointer-events-none"
-        style={{ y: useTransform(scrollYProgress, [0, 1], [0, 60]) }}
+        style={{ y: blobY }}
         aria-hidden
       />
 
-      <div className="w-full max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center py-20">
+      <div className="w-full max-w-7xl mx-auto px-6 py-20 flex items-center gap-8 lg:gap-16">
 
-        {/* Left — text, parallaxes up on scroll */}
-        <motion.div style={{ y: textY }}>
+        {/* Left spacer — same width as album column, keeps text visually centered */}
+        <div className={`hidden lg:block ${COL}`} aria-hidden />
+
+        {/* Center: all text content */}
+        <motion.div
+          style={{ y: textY }}
+          className="flex-1 flex flex-col items-center text-center min-w-0"
+        >
           <motion.p
             className="text-eyebrow text-ink-soft mb-6"
             initial={{ opacity: 0, y: 16 }}
@@ -76,9 +105,7 @@ export function Hero({ featured }: Props) {
                     beautifully
                     <span className="text-pop">.</span>
                   </span>
-                ) : (
-                  word
-                )}
+                ) : word}
               </motion.span>
             ))}
           </h1>
@@ -93,7 +120,7 @@ export function Hero({ featured }: Props) {
           </motion.p>
 
           <motion.div
-            className="flex flex-wrap gap-3"
+            className="flex flex-wrap gap-3 justify-center"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55, duration: 0.6, ease: easeOut }}
@@ -101,27 +128,30 @@ export function Hero({ featured }: Props) {
             <MagneticHover strength={0.4}>
               <Link
                 href="/browse"
-                className="px-7 py-3.5 rounded-full bg-ink text-background text-sm font-bold hover:opacity-80 transition-opacity"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-ink text-background text-sm font-bold hover:opacity-80 transition-opacity"
               >
+                <BrowseIcon />
                 Browse charts
               </Link>
             </MagneticHover>
             <MagneticHover strength={0.4}>
               <Link
                 href="/search"
-                className="px-7 py-3.5 rounded-full border border-hairline text-sm font-medium hover:border-foreground hover:bg-elevated transition-colors"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border border-hairline text-sm font-medium hover:border-foreground hover:bg-elevated transition-colors"
               >
+                <SearchIcon />
                 Search music
               </Link>
             </MagneticHover>
           </motion.div>
 
-          <OrbSearch className="w-full max-w-sm mt-6" />
+          {/* OrbSearch — pushed down with extra top margin */}
+          <OrbSearch className="w-full max-w-sm mt-12" />
         </motion.div>
 
-        {/* Right — featured album floats + parallaxes down on scroll */}
+        {/* Right: featured album — parallaxes on scroll, matches spacer width */}
         <motion.div
-          className="relative flex justify-center lg:justify-end"
+          className={`relative hidden lg:flex items-center justify-center ${COL} pt-12`}
           style={{ y: imageY, opacity: imageOpacity }}
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -132,13 +162,13 @@ export function Hero({ featured }: Props) {
               <motion.div
                 animate={shouldReduce ? {} : { y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="relative"
+                className="relative z-10"
               >
                 <Link href={`/albums?id=${featured.id}`}>
                   <img
                     src={featured.artwork}
                     alt={featured.name}
-                    className="w-72 h-72 lg:w-96 lg:h-96 object-cover rounded-xl shadow-2xl"
+                    className="w-56 h-56 xl:w-72 xl:h-72 object-cover rounded-xl shadow-2xl"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   />
                 </Link>
@@ -155,7 +185,7 @@ export function Hero({ featured }: Props) {
                     animate={{ scale: [1, 1.35, 1], opacity: [1, 0.6, 1] }}
                     transition={{ duration: 1.6, repeat: Infinity }}
                   />
-                  <span className="text-xs font-bold truncate max-w-[160px]">{featured.name}</span>
+                  <span className="text-xs font-bold truncate max-w-[130px]">{featured.name}</span>
                   <span className="text-xs text-ink-soft flex-shrink-0">by {featured.artistName}</span>
                 </motion.div>
 
@@ -165,12 +195,12 @@ export function Hero({ featured }: Props) {
                 </div>
               </motion.div>
 
-              {/* Stacked ghost cards */}
-              <div className="absolute top-6 right-6 lg:right-0 w-72 h-72 lg:w-96 lg:h-96 rounded-xl bg-elevated -z-10 rotate-3 opacity-60" aria-hidden />
-              <div className="absolute top-12 right-12 lg:right-6 w-72 h-72 lg:w-96 lg:h-96 rounded-xl bg-elevated -z-20 rotate-6 opacity-30" aria-hidden />
+              {/* Ghost stacked cards */}
+              <div className="absolute top-16 -right-2 w-56 h-56 xl:w-72 xl:h-72 rounded-xl bg-elevated -z-0 rotate-3 opacity-60" aria-hidden />
+              <div className="absolute top-22 -right-5 w-56 h-56 xl:w-72 xl:h-72 rounded-xl bg-elevated -z-10 rotate-6 opacity-30" aria-hidden />
             </>
           ) : (
-            <div className="w-72 h-72 lg:w-96 lg:h-96 rounded-xl bg-elevated animate-pulse" />
+            <div className="w-56 h-56 xl:w-72 xl:h-72 rounded-xl bg-elevated animate-pulse" />
           )}
         </motion.div>
       </div>
@@ -181,7 +211,7 @@ export function Hero({ featured }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.6 }}
-        style={{ opacity: useTransform(scrollYProgress, [0, 0.15], [1, 0]) }}
+        style={{ opacity: arrowOpacity }}
       >
         <motion.div
           animate={shouldReduce ? {} : { y: [0, 6, 0] }}
