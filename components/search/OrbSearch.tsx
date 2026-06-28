@@ -69,7 +69,9 @@ function shuffle<T>(arr: T[]): T[] {
 const CHAR_DELAY = 55;
 const IDLE_DELAY = 1800;
 
-export function OrbSearch() {
+type Props = { className?: string };
+
+export function OrbSearch({ className }: Props) {
   const router = useRouter();
   const [value, setValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -119,69 +121,67 @@ export function OrbSearch() {
   }
 
   return (
-    <div className="w-full flex justify-center px-6 pt-8 pb-4">
-      <motion.form
-        onSubmit={handleSubmit}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-2xl"
+    <motion.form
+      onSubmit={handleSubmit}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.7, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      <motion.div
+        animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        className="flex items-center gap-3 px-4 py-3 bg-[#0A0A0A] rounded-full border border-transparent"
+        style={{
+          boxShadow: isFocused
+            ? "0 0 0 2px #C8FF00, 0 16px 48px rgba(0,0,0,0.22)"
+            : "0 6px 30px rgba(0,0,0,0.16)",
+        }}
       >
-        <motion.div
-          animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
-          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center gap-4 px-5 py-4 bg-[#0A0A0A] rounded-full border border-transparent"
-          style={{
-            boxShadow: isFocused
-              ? "0 0 0 2px #C8FF00, 0 20px 60px rgba(0,0,0,0.25)"
-              : "0 8px 40px rgba(0,0,0,0.18)",
-          }}
-        >
-          {/* Lime pulsing orb */}
-          <div className="relative flex-shrink-0 w-10 h-10">
-            <motion.div
-              animate={{ scale: [1, 1.15, 1], opacity: [0.9, 1, 0.9] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-              className="w-10 h-10 rounded-full"
-              style={{
-                background: "radial-gradient(circle at 35% 35%, #e8ff70 0%, #C8FF00 50%, #8ab800 100%)",
-                boxShadow: "0 0 20px rgba(200,255,0,0.6), 0 0 40px rgba(200,255,0,0.25)",
-              }}
-            />
-            <motion.div
-              animate={{ scale: [0.7, 1.4, 0.7], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute inset-0 rounded-full"
-              style={{ background: "rgba(200,255,0,0.3)" }}
-            />
-          </div>
-
-          <div className="w-px h-8 bg-[#2a2a2a] flex-shrink-0" />
-
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder={`${displayedText}${isTyping ? "|" : ""}`}
-            aria-label="Search songs and albums"
-            className="flex-1 text-base text-white placeholder-[#555] bg-transparent border-none outline-none font-light tracking-wide"
+        {/* Lime pulsing orb */}
+        <div className="relative flex-shrink-0 w-7 h-7">
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.9, 1, 0.9] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            className="w-7 h-7 rounded-full"
+            style={{
+              background: "radial-gradient(circle at 35% 35%, #e8ff70 0%, #C8FF00 50%, #8ab800 100%)",
+              boxShadow: "0 0 14px rgba(200,255,0,0.6), 0 0 28px rgba(200,255,0,0.2)",
+            }}
           />
+          <motion.div
+            animate={{ scale: [0.7, 1.4, 0.7], opacity: [0.4, 0, 0.4] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 rounded-full"
+            style={{ background: "rgba(200,255,0,0.3)" }}
+          />
+        </div>
 
-          {value && (
-            <motion.button
-              type="submit"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="flex-shrink-0 h-8 px-4 rounded-full bg-pop text-pop-ink text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              Search
-            </motion.button>
-          )}
-        </motion.div>
-      </motion.form>
-    </div>
+        <div className="w-px h-6 bg-[#2a2a2a] flex-shrink-0" />
+
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={`${displayedText}${isTyping ? "|" : ""}`}
+          aria-label="Search songs and albums"
+          className="flex-1 text-sm text-white placeholder-[#555] bg-transparent border-none outline-none font-light tracking-wide"
+        />
+
+        {value && (
+          <motion.button
+            type="submit"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="flex-shrink-0 h-7 px-3.5 rounded-full bg-pop text-pop-ink text-xs font-semibold hover:opacity-90 transition-opacity"
+          >
+            Search
+          </motion.button>
+        )}
+      </motion.div>
+    </motion.form>
   );
 }

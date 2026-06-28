@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform, useReducedMotion, type Variants } from "framer-motion";
 import { useRef } from "react";
 import { MagneticHover } from "@/components/ui/MagneticHover";
+import { OrbSearch } from "@/components/search/OrbSearch";
 import type { Album } from "@/types";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
@@ -114,6 +115,8 @@ export function Hero({ featured }: Props) {
               </Link>
             </MagneticHover>
           </motion.div>
+
+          <OrbSearch className="w-full max-w-sm mt-6" />
         </motion.div>
 
         {/* Right — featured album floats + parallaxes down on scroll */}
