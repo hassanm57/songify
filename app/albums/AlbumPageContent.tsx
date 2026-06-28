@@ -7,8 +7,7 @@ import { useAlbum } from "@/lib/hooks/useAlbum";
 import { useRelatedAlbums } from "@/lib/hooks/useRelatedAlbums";
 import { TrackRow } from "@/components/cards/TrackRow";
 import { AlbumRail } from "@/components/home/GenreRail";
-import { BuyButton } from "@/components/commerce/BuyButton";
-import { formatYear, formatDuration } from "@/lib/format";
+import { formatYear, formatDuration, formatPrice } from "@/lib/format";
 
 function Skeleton() {
   return (
@@ -95,15 +94,14 @@ export function AlbumPageContent() {
               <span>{album.genre}</span>
             </p>
             <div className="flex flex-wrap gap-3 mt-2">
-              <BuyButton item={album} type="album" />
-              <Link
+              <a
                 href={album.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-2.5 rounded-full border border-current text-sm font-medium opacity-60 hover:opacity-100 transition-opacity"
+                className="px-6 py-2.5 rounded-full bg-pop text-pop-ink text-sm font-bold hover:opacity-90 transition-opacity"
               >
-                Apple Music
-              </Link>
+                {album.price ? `Buy ${formatPrice(album.price)}` : "Get on Apple Music"}
+              </a>
             </div>
           </motion.div>
         </div>

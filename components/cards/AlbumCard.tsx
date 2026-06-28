@@ -30,7 +30,7 @@ export function AlbumCard({ album, queue = [], className }: Props) {
   const handleFav = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggle({ id: album.id, type: "album", name: album.name, artistName: album.artistName, artwork: album.artwork });
+    toggle({ id: album.id, type: "album", name: album.name, artistName: album.artistName, artwork: album.artwork, artistId: album.artistId });
   };
 
   return (
@@ -41,13 +41,20 @@ export function AlbumCard({ album, queue = [], className }: Props) {
     >
       <Link href={`/albums?id=${album.id}`} className="block">
         {/* Artwork */}
-        <div className="relative overflow-hidden rounded-[0.375rem] aspect-[3/4] bg-elevated">
-          <img
-            src={album.artwork}
-            alt={album.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
+        <div className="relative overflow-hidden rounded-[0.375rem] aspect-square bg-elevated">
+          {album.artwork ? (
+            <img
+              src={album.artwork}
+              alt={album.name}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-4xl font-black opacity-10">{album.name[0]}</span>
+            </div>
+          )}
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
             <button

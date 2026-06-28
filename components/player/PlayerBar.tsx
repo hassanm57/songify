@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePlayer } from "@/context/PlayerProvider";
+import { MagneticHover } from "@/components/ui/MagneticHover";
 import { Scrubber } from "./Scrubber";
 import { formatSeconds } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -103,13 +104,27 @@ export function PlayerBar() {
                   <PrevIcon />
                 </button>
 
-                <button
-                  onClick={isPlaying ? pause : resume}
-                  aria-label={isPlaying ? "Pause" : "Play"}
-                  className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
-                >
-                  {isPlaying ? <PauseIcon /> : <PlayIcon />}
-                </button>
+                <MagneticHover strength={0.5}>
+                  <motion.button
+                    onClick={isPlaying ? pause : resume}
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    whileTap={{ scale: 0.92 }}
+                    className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={isPlaying ? "pause" : "play"}
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex items-center justify-center"
+                      >
+                        {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                      </motion.span>
+                    </AnimatePresence>
+                  </motion.button>
+                </MagneticHover>
 
                 <button
                   onClick={next}

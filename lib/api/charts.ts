@@ -1,17 +1,16 @@
 import type { Album, Track } from "@/types";
-import { normalizeFeedAlbum, normalizeFeedTrack, type RawFeedResult } from "@/lib/normalize";
+import { normalizeItunesRSSAlbum, normalizeItunesRSSTrack, type RawItunesRSSEntry } from "@/lib/normalize";
 
-const COUNTRY = "us";
-const BASE = `https://rss.applemarketingtools.com/api/v2/${COUNTRY}/music/most-played`;
+// itunes.apple.com has access-control-allow-origin: * so it's safe to fetch client-side
+const BASE = "https://itunes.apple.com";
 
 const memCache = new Map<string, { data: unknown; ts: number }>();
-const TTL = 5 * 60 * 1000; // 5 min
+const TTL = 5 * 60 * 1000;
 
-async function fetchFeed<T>(url: string): Promise<T[]> {
+async function fetchItunesRSS<T>(url: string): Promise<T[]> {
   const cached = memCache.get(url);
   if (cached && Date.now() - cached.ts < TTL) return cached.data as T[];
 
-  // Try sessionStorage first (survives client-side navigation)
   if (typeof window !== "undefined") {
     try {
       const ss = sessionStorage.getItem(url);
@@ -26,9 +25,9 @@ async function fetchFeed<T>(url: string): Promise<T[]> {
   }
 
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Feed fetch failed: ${res.status}`);
+  if (!res.ok) throw new Error(`iTunes RSS fetch failed: ${res.status}`);
   const json = await res.json();
-  const data: T[] = json.feed?.results ?? [];
+  const data: T[] = json.feed?.entry ?? [];
 
   memCache.set(url, { data, ts: Date.now() });
   if (typeof window !== "undefined") {
@@ -41,11 +40,11 @@ async function fetchFeed<T>(url: string): Promise<T[]> {
 }
 
 export async function fetchTopAlbums(limit = 50): Promise<Album[]> {
-  const raw = await fetchFeed<RawFeedResult>(`${BASE}/${limit}/albums.json`);
-  return raw.map(normalizeFeedAlbum);
+  const raw = await fetchItunesRSS<RawItunesRSSEntry>(`${BASE}/us/rss/topalbums/limit=${limit}/json`);
+  return raw.map(normalizeItunesRSSAlbum);
 }
 
 export async function fetchTopSongs(limit = 50): Promise<Track[]> {
-  const raw = await fetchFeed<RawFeedResult>(`${BASE}/${limit}/songs.json`);
-  return raw.map(normalizeFeedTrack);
+  const raw = await fetchItunesRSS<RawItunesRSSEntry>(`${BASE}/us/rss/topsongs/limit=${limit}/json`);
+  return raw.map(normalizeItunesRSSTrack);
 }

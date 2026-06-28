@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-type FavoriteItem = { id: number; type: "album" | "track"; name: string; artistName: string; artwork: string };
+export type FavoriteItem = { id: number; type: "album" | "track"; name: string; artistName: string; artwork: string; artistId?: number };
 
 type FavoritesCtx = {
   favorites: FavoriteItem[];

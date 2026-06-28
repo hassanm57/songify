@@ -4,7 +4,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/context/FavoritesProvider";
 import { usePlayer } from "@/context/PlayerProvider";
-import { useReceipt, makePurchasedItem } from "@/context/ReceiptProvider";
 import { formatDuration, formatPrice } from "@/lib/format";
 import type { Track } from "@/types";
 
@@ -36,7 +35,6 @@ type Props = {
 export function TrackRow({ track, index, queue = [], className }: Props) {
   const { isFavorite, toggle } = useFavorites();
   const player = usePlayer();
-  const { initiateCheckout } = useReceipt();
   const fav = isFavorite(track.id);
   const isActive = player.currentTrack?.id === track.id;
 
@@ -52,7 +50,7 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
 
   const handleFav = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggle({ id: track.id, type: "track", name: track.name, artistName: track.artistName, artwork: track.artwork });
+    toggle({ id: track.id, type: "track", name: track.name, artistName: track.artistName, artwork: track.artwork, artistId: track.artistId });
   };
 
   return (
@@ -86,12 +84,19 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
       </div>
 
       {/* Artwork */}
-      <img
-        src={track.artwork}
-        alt={track.albumName}
-        className="w-10 h-10 rounded object-cover flex-shrink-0"
-        loading="lazy"
-      />
+      {track.artwork ? (
+        <img
+          src={track.artwork}
+          alt={track.albumName}
+          className="w-10 h-10 rounded object-cover flex-shrink-0"
+          loading="lazy"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+        />
+      ) : (
+        <div className="w-10 h-10 rounded bg-elevated flex-shrink-0 flex items-center justify-center">
+          <span className="text-xs font-bold opacity-20">{track.name[0]}</span>
+        </div>
+      )}
 
       {/* Name + artist */}
       <div className="flex-1 min-w-0">
@@ -114,15 +119,17 @@ export function TrackRow({ track, index, queue = [], className }: Props) {
         {formatDuration(track.durationMs)}
       </span>
 
-      {/* Buy */}
+      {/* Price / Buy link */}
       <div className="flex-shrink-0 w-16 text-right" onClick={(e) => e.stopPropagation()}>
         {track.price ? (
-          <button
-            onClick={() => initiateCheckout(makePurchasedItem({ id: track.id, name: track.name, artistName: track.artistName, artwork: track.artwork, price: track.price, currency: track.currency }, "track"))}
+          <a
+            href={track.url || `https://music.apple.com/us/album/-/${track.albumId}?i=${track.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-xs font-bold text-pop tabular-nums opacity-0 group-hover:opacity-100 hover:underline transition-opacity"
           >
             {formatPrice(track.price)}
-          </button>
+          </a>
         ) : null}
       </div>
 

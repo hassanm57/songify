@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AlbumCard } from "@/components/cards/AlbumCard";
 import { TrackRow } from "@/components/cards/TrackRow";
 import { CardSkeleton, TrackSkeleton } from "@/components/cards/CardSkeleton";
+import { Reveal } from "@/components/ui/Reveal";
 import type { Album, Track } from "@/types";
 
 type AlbumRailProps = {
@@ -28,17 +29,19 @@ const CARD_WIDTH = "w-44 sm:w-52 flex-none";
 
 function RailHeader({ title, eyebrow, viewAllHref }: { title: string; eyebrow?: string; viewAllHref?: string }) {
   return (
-    <div className="flex items-end justify-between mb-5 px-0.5">
-      <div>
-        {eyebrow && <p className="text-eyebrow text-ink-soft mb-1">{eyebrow}</p>}
-        <h2 className="text-h2">{title}</h2>
+    <Reveal direction="up" margin="-40px">
+      <div className="flex items-end justify-between mb-5 px-0.5">
+        <div>
+          {eyebrow && <p className="text-eyebrow text-ink-soft mb-1">{eyebrow}</p>}
+          <h2 className="text-h2">{title}</h2>
+        </div>
+        {viewAllHref && (
+          <Link href={viewAllHref} className="text-sm font-medium text-ink-soft hover:text-foreground hover:underline transition-colors">
+            View all
+          </Link>
+        )}
       </div>
-      {viewAllHref && (
-        <Link href={viewAllHref} className="text-sm font-medium text-ink-soft hover:text-foreground hover:underline transition-colors">
-          View all
-        </Link>
-      )}
-    </div>
+    </Reveal>
   );
 }
 

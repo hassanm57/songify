@@ -1,43 +1,54 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ScrollTiltedGrid } from "@/components/motion/ScrollTiltedGrid";
+import { useRef } from "react";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { ScrollTiltedGrid, DEFAULT_GRID_IMAGES } from "@/components/motion/ScrollTiltedGrid";
 import type { Album } from "@/types";
 
 type Props = { albums: Album[] };
 
 export function ShowcaseGrid({ albums }: Props) {
-  const images = albums.length
-    ? albums.slice(0, 12).map((a) => a.artwork)
-    : undefined; // falls back to DEFAULT_GRID_IMAGES
+  const sectionRef = useRef<HTMLElement>(null);
+  const shouldReduce = useReducedMotion();
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "center center"],
+  });
+
+  const headerY = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [40, 0]);
+  const headerOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
+
+  // Use live album artwork; fall back to curated images only if all are empty
+  const liveImages = albums
+    .slice(0, 12)
+    .map((a) => a.artwork)
+    .filter(Boolean) as string[];
+
+  const images = liveImages.length >= 4 ? liveImages : undefined; // undefined → DEFAULT_GRID_IMAGES
 
   return (
-    <section className="relative overflow-hidden border-t border-hairline">
-      {/* Section header */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none">
-        <motion.p
-          className="text-eyebrow text-ink-soft mb-3"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          Chart toppers
-        </motion.p>
-        <motion.h2
-          className="text-h2 whitespace-nowrap"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-        >
+    <section ref={sectionRef} className="relative overflow-hidden border-t border-hairline">
+      {/* Section header — parallaxes in from below */}
+      <motion.div
+        className="sticky top-28 z-20 text-center pointer-events-none"
+        style={{ y: headerY, opacity: headerOpacity }}
+      >
+        <p className="text-eyebrow text-ink-soft mb-2">Chart toppers</p>
+        <h2 className="text-h2">
           Now trending
-          <span className="text-pop">.</span>
-        </motion.h2>
-      </div>
+          <motion.span
+            className="text-pop inline-block"
+            animate={shouldReduce ? {} : { scale: [1, 1.3, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            .
+          </motion.span>
+        </h2>
+      </motion.div>
 
       <ScrollTiltedGrid
-        images={images}
+        images={images ?? [...DEFAULT_GRID_IMAGES]}
         maxWidth="2xl"
         gap={8}
         maxTilt={65}

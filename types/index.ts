@@ -13,6 +13,7 @@ export type Track = {
   durationMs: number;
   releaseDate: string;
   trackNumber: number;
+  url: string;
 };
 
 export type Album = {

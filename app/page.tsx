@@ -7,6 +7,7 @@ import { ShowcaseGrid } from "@/components/home/ShowcaseGrid";
 import { AlbumShelfCarousel } from "@/components/home/AlbumShelfCarousel";
 import { DesktopSidebar, MobileGenreBar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
+import { OrbSearch } from "@/components/search/OrbSearch";
 import { useTopAlbums, useTopSongs } from "@/lib/hooks/useCharts";
 
 export default function Home() {
@@ -28,6 +29,7 @@ export default function Home() {
 
   return (
     <>
+      <OrbSearch />
       <Hero featured={featured} />
 
       {/* Mobile-only chip bar — sits above the rails, hidden on desktop */}

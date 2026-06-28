@@ -19,6 +19,7 @@ export type RawItunesTrack = {
   trackTimeMillis?: number;
   releaseDate: string;
   trackNumber?: number;
+  trackViewUrl?: string;
 };
 
 export type RawItunesAlbum = {
@@ -74,6 +75,7 @@ export function normalizeTrack(raw: RawItunesTrack): Track {
     durationMs: raw.trackTimeMillis ?? 0,
     releaseDate: raw.releaseDate,
     trackNumber: raw.trackNumber ?? 0,
+    url: raw.trackViewUrl ?? `https://music.apple.com/us/album/-/${raw.collectionId}?i=${raw.trackId}`,
   };
 }
 
@@ -134,5 +136,84 @@ export function normalizeFeedTrack(raw: RawFeedResult): Track {
     durationMs: 0,
     releaseDate: raw.releaseDate ?? "",
     trackNumber: 0,
+    url: raw.url ?? "",
+  };
+}
+
+// ─── iTunes RSS feed (itunes.apple.com/us/rss/...) ───────────────────────────
+
+export type RawItunesRSSEntry = {
+  "im:name": { label: string };
+  "im:image": Array<{ label: string; attributes: { height: string } }>;
+  "im:price"?: { label: string; attributes: { amount: string; currency: string } };
+  "im:itemCount"?: { label: string };
+  "id": { label: string; attributes: { "im:id": string } };
+  "im:artist": { label: string; attributes?: { href?: string } };
+  "category"?: { attributes: { term: string } };
+  "im:releaseDate"?: { label: string; attributes?: { label?: string } };
+  "link": { attributes: { href: string } };
+  "im:collection"?: {
+    "im:name"?: { label: string };
+    "link"?: { attributes: { href: string } };
+  };
+};
+
+function parseIdFromUrl(url: string): number {
+  const match = url.match(/\/(\d+)(?:\?|\/|$)/);
+  return match ? parseInt(match[1]) : 0;
+}
+
+function parsePrice(entry: RawItunesRSSEntry): number | null {
+  const amount = parseFloat(entry["im:price"]?.attributes.amount ?? "");
+  return isNaN(amount) || amount <= 0 ? null : amount;
+}
+
+export function normalizeItunesRSSAlbum(entry: RawItunesRSSEntry): Album {
+  const id = parseInt(entry["id"].attributes["im:id"]);
+  const artwork = upscale(entry["im:image"][2]?.label ?? entry["im:image"][0]?.label ?? "");
+  const artistHref = entry["im:artist"].attributes?.href ?? "";
+  const artistId = parseIdFromUrl(artistHref);
+  const url = entry["link"].attributes.href.replace(/\?.*/, "");
+
+  return {
+    id,
+    name: entry["im:name"].label,
+    artistName: entry["im:artist"].label,
+    artistId,
+    artwork,
+    price: parsePrice(entry),
+    currency: entry["im:price"]?.attributes.currency ?? "USD",
+    genre: normalizeGenre(entry["category"]?.attributes.term ?? ""),
+    trackCount: parseInt(entry["im:itemCount"]?.label ?? "0"),
+    releaseDate: entry["im:releaseDate"]?.label ?? "",
+    url,
+  };
+}
+
+export function normalizeItunesRSSTrack(entry: RawItunesRSSEntry): Track {
+  const id = parseInt(entry["id"].attributes["im:id"]);
+  const artwork = upscale(entry["im:image"][2]?.label ?? entry["im:image"][0]?.label ?? "");
+  const artistHref = entry["im:artist"].attributes?.href ?? "";
+  const artistId = parseIdFromUrl(artistHref);
+  const albumHref = entry["im:collection"]?.link?.attributes.href ?? "";
+  const albumId = parseIdFromUrl(albumHref);
+  const url = entry["link"].attributes.href.replace(/\?.*/, "");
+
+  return {
+    id,
+    name: entry["im:name"].label,
+    artistName: entry["im:artist"].label,
+    artistId,
+    albumName: entry["im:collection"]?.["im:name"]?.label ?? "",
+    albumId,
+    artwork,
+    previewUrl: null,
+    price: parsePrice(entry),
+    currency: entry["im:price"]?.attributes.currency ?? "USD",
+    genre: normalizeGenre(entry["category"]?.attributes.term ?? ""),
+    durationMs: 0,
+    releaseDate: entry["im:releaseDate"]?.label ?? "",
+    trackNumber: 0,
+    url,
   };
 }

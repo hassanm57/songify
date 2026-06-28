@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { SearchOverlay } from "@/components/search/SearchOverlay";
+import { MagneticHover } from "@/components/ui/MagneticHover";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -31,17 +32,19 @@ export function TopBar() {
     <>
       <header className="fixed top-0 inset-x-0 z-50 h-14 flex items-center px-6 bg-background/90 backdrop-blur-md border-b border-hairline">
         {/* Wordmark */}
-        <Link href="/" className="mr-8 flex items-center gap-0.5 font-bold text-lg tracking-tight select-none">
-          Song
-          <span className="relative">
-            <span className="text-foreground">i</span>
-            <span
-              className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-pop"
-              aria-hidden
-            />
-          </span>
-          fy
-        </Link>
+        <MagneticHover strength={0.4} className="mr-8">
+          <Link href="/" className="flex items-center gap-0.5 font-bold text-lg tracking-tight select-none">
+            Song
+            <span className="relative">
+              <span className="text-foreground">i</span>
+              <span
+                className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-pop"
+                aria-hidden
+              />
+            </span>
+            fy
+          </Link>
+        </MagneticHover>
 
         {/* Nav */}
         <nav className="flex items-center gap-1 mr-auto">
