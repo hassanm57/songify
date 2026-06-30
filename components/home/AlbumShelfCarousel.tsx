@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { formatYear } from "@/lib/format";
 import { Reveal } from "@/components/ui/Reveal";
@@ -12,7 +12,6 @@ import type { Album } from "@/types";
 type Props = { albums: Album[] };
 
 export function AlbumShelfCarousel({ albums }: Props) {
-  const sectionRef = useRef<HTMLElement>(null);
   const shouldReduce = useReducedMotion();
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -37,15 +36,6 @@ export function AlbumShelfCarousel({ albums }: Props) {
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
-  // Subtle parallax on the whole section
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-    // @ts-ignore -- valid runtime option, not yet in this version's types
-    layoutEffect: false,
-  });
-  const sectionY = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [30, -30]);
-
   if (!albums.length) return null;
 
   // Only use albums with artwork for the shelf
@@ -54,8 +44,8 @@ export function AlbumShelfCarousel({ albums }: Props) {
   const shelf = withArtwork.slice(0, 15);
 
   return (
-    <section ref={sectionRef} className="border-t border-hairline overflow-hidden">
-      <motion.div style={{ y: sectionY }} className="py-20">
+    <section className="border-t border-hairline overflow-hidden">
+      <div className="py-20">
       <div className="max-w-7xl mx-auto px-6 mb-8">
         <Reveal direction="up">
           <p className="text-eyebrow text-ink-soft mb-2">Featured shelf</p>
@@ -128,7 +118,7 @@ export function AlbumShelfCarousel({ albums }: Props) {
           })}
         </div>
       </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

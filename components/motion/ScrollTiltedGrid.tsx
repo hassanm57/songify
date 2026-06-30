@@ -2,10 +2,11 @@
 
 import {
   motion,
-  useScroll,
   useTransform,
   useMotionTemplate,
+  useMotionValue,
   useReducedMotion,
+  useScroll,
   cubicBezier,
 } from "framer-motion";
 import Link from "next/link";
@@ -66,17 +67,51 @@ type TileConfig = {
 };
 
 function Tile({ src, href, side, config }: { src: string; href?: string; side: Side; config: TileConfig }) {
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress: p } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-    // @ts-ignore -- valid runtime option, not yet in this version's types
-    layoutEffect: false,
-  });
-
+  const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const sign = side === "L" ? -1 : 1;
   const { aspectRatio, perspective, maxTilt, maxBlur, rounded } = config;
+
+  // Use window scroll (no target ref) to avoid framer-motion's hydration check.
+  // We subscribe to scrollY and compute per-element progress via getBoundingClientRect.
+  const { scrollY } = useScroll();
+  const p = useMotionValue(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let elOffsetTop = 0;
+    let elHeight = 0;
+    let vh = 0;
+
+    // Equivalent to offset: ["start end", "end start"]
+    const compute = (sy: number) => {
+      const start = elOffsetTop - vh;       // scrollY when p = 0 (el enters from bottom)
+      const end   = elOffsetTop + elHeight; // scrollY when p = 1 (el exits at top)
+      const range = end - start;
+      if (range <= 0) return;
+      p.set(Math.max(0, Math.min(1, (sy - start) / range)));
+    };
+
+    // Recalculate geometry (stable between scrolls, only changes on resize)
+    const recalc = () => {
+      const rect = el.getBoundingClientRect();
+      elOffsetTop = rect.top + window.scrollY;
+      elHeight = rect.height;
+      vh = window.innerHeight;
+      compute(window.scrollY);
+    };
+
+    recalc();
+    window.addEventListener("resize", recalc);
+    const unsub = scrollY.on("change", compute);
+
+    return () => {
+      window.removeEventListener("resize", recalc);
+      unsub();
+    };
+  }, [p, scrollY]);
 
   const blur     = useTransform(p, [0, 0.5, 1], [maxBlur, 0, maxBlur],  { ease: focusEase });
   const bright   = useTransform(p, [0, 0.5, 1], [0, 1, 0],              { ease: focusEase });
@@ -114,18 +149,16 @@ function Tile({ src, href, side, config }: { src: string; href?: string; side: S
 
   if (reduce) {
     return (
-      <figure ref={ref} className="relative z-10 m-0">
+      <div ref={ref} className="relative z-10 m-0">
         {href ? <Link href={href} className="block">{inner}</Link> : inner}
-      </figure>
+      </div>
     );
   }
 
-  // Use a plain <figure> so React sets ref.current synchronously at commit —
-  // motion.figure defers ref population, breaking useScroll's target check.
   return (
-    <figure ref={ref} className="relative z-10 m-0" style={{ perspective: `${perspective}px`, willChange: "transform" }}>
+    <div ref={ref} className="relative z-10 m-0" style={{ perspective: `${perspective}px`, willChange: "transform" }}>
       {href ? <Link href={href} className="block">{animatedInner}</Link> : animatedInner}
-    </figure>
+    </div>
   );
 }
 

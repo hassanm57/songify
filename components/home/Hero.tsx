@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { motion, useScroll, useTransform, useReducedMotion, type Variants } from "framer-motion";
-import { useRef } from "react";
 import { MagneticHover } from "@/components/ui/MagneticHover";
 import { OrbSearch } from "@/components/search/OrbSearch";
 import type { Album } from "@/types";
@@ -45,27 +44,20 @@ type Props = { featured: Album | null };
 const COL = "w-64 xl:w-80 flex-shrink-0";
 
 export function Hero({ featured }: Props) {
-  const sectionRef = useRef<HTMLElement>(null);
   const shouldReduce = useReducedMotion();
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-    // @ts-ignore -- valid runtime option, not yet in this version's types
-    layoutEffect: false,
-  });
+  // Window scroll — no target ref, avoids hydration timing issues in Next.js.
+  // Hero is ~100vh tall; pixel ranges approximate the old [0,1] progress mapping.
+  const { scrollY } = useScroll();
 
-  const imageY       = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, -90]);
-  const textY        = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, 50]);
-  const imageOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const blobY        = useTransform(scrollYProgress, [0, 1], [0, 60]);
-  const arrowOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const imageY       = useTransform(scrollY, [0, 800], shouldReduce ? [0, 0] : [0, -90]);
+  const textY        = useTransform(scrollY, [0, 800], shouldReduce ? [0, 0] : [0, 50]);
+  const imageOpacity = useTransform(scrollY, [0, 640], [1, 0]);
+  const blobY        = useTransform(scrollY, [0, 800], [0, 60]);
+  const arrowOpacity = useTransform(scrollY, [0, 120], [1, 0]);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative min-h-[calc(100vh-3.5rem)] flex items-center overflow-hidden"
-    >
+    <section className="relative min-h-[calc(100vh-3.5rem)] flex items-center overflow-hidden">
       {/* Lime glow blob */}
       <motion.div
         className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full opacity-[0.04] blur-3xl bg-pop pointer-events-none"

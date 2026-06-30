@@ -1,40 +1,30 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ScrollTiltedGrid, DEFAULT_GRID_IMAGES } from "@/components/motion/ScrollTiltedGrid";
 import type { Album } from "@/types";
 
 type Props = { albums: Album[] };
 
 export function ShowcaseGrid({ albums }: Props) {
-  const sectionRef = useRef<HTMLElement>(null);
   const shouldReduce = useReducedMotion();
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "center center"],
-    // @ts-ignore -- valid runtime option, not yet in this version's types
-    layoutEffect: false,
-  });
-
-  const headerY = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [40, 0]);
-  const headerOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
-
-  // Use live album artwork; fall back to curated images only if all are empty
   const liveAlbums = albums.slice(0, 12).filter((a) => a.artwork);
   const liveImages = liveAlbums.map((a) => a.artwork) as string[];
   const liveLinks = liveAlbums.map((a) => `/albums?id=${a.id}`);
 
-  const images = liveImages.length >= 4 ? liveImages : undefined; // undefined → DEFAULT_GRID_IMAGES
-  const links = liveImages.length >= 4 ? liveLinks : undefined;
+  const images = liveImages.length >= 4 ? liveImages : undefined;
+  const links  = liveImages.length >= 4 ? liveLinks  : undefined;
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden border-t border-hairline">
-      {/* Section header — parallaxes in from below */}
+    <section className="relative overflow-hidden border-t border-hairline">
+      {/* Section header — animates in as the section enters the viewport */}
       <motion.div
         className="sticky top-28 z-20 text-center pointer-events-none"
-        style={{ y: headerY, opacity: headerOpacity }}
+        initial={{ y: shouldReduce ? 0 : 40, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: false, margin: "0px 0px -10% 0px" }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         <p className="text-eyebrow text-ink-soft mb-2">Chart toppers</p>
         <h2 className="text-h2">
