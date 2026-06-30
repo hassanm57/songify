@@ -2,9 +2,8 @@ import type { Album, Track } from "@/types";
 import {
   normalizeAlbum,
   normalizeTrack,
-  normalizeItunesRSSAlbum,
-  normalizeItunesRSSTrack,
-  type RawItunesRSSEntry,
+  normalizeFeedAlbum,
+  type RawFeedResult,
   type RawItunesAlbum,
   type RawItunesTrack,
 } from "@/lib/normalize";
@@ -15,46 +14,30 @@ const TTL = 5 * 60 * 1000;
 
 // ─── Cache helpers ────────────────────────────────────────────────────────────
 
-function getCache<T>(url: string): T[] | null {
-  const mem = memCache.get(url);
+function getCache<T>(key: string): T[] | null {
+  const mem = memCache.get(key);
   if (mem && Date.now() - mem.ts < TTL) return mem.data as T[];
   if (typeof window !== "undefined") {
     try {
-      const ss = sessionStorage.getItem(url);
+      const ss = sessionStorage.getItem(key);
       if (ss) {
         const { data, ts } = JSON.parse(ss);
-        if (Date.now() - ts < TTL) { memCache.set(url, { data, ts }); return data as T[]; }
+        if (Date.now() - ts < TTL) { memCache.set(key, { data, ts }); return data as T[]; }
       }
     } catch {}
   }
   return null;
 }
 
-function setCache(url: string, data: unknown) {
+function setCache(key: string, data: unknown) {
   const ts = Date.now();
-  memCache.set(url, { data, ts });
+  memCache.set(key, { data, ts });
   if (typeof window !== "undefined") {
-    try { sessionStorage.setItem(url, JSON.stringify({ data, ts })); } catch {}
+    try { sessionStorage.setItem(key, JSON.stringify({ data, ts })); } catch {}
   }
 }
 
-// ─── Old iTunes RSS (may fail on some browsers / regions) ────────────────────
-
-async function fetchItunesRSS<T>(url: string): Promise<T[]> {
-  const cached = getCache<T>(url);
-  if (cached) return cached;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`RSS ${res.status}`);
-  const json = await res.json();
-  const data: T[] = json.feed?.entry ?? [];
-  if (data.length === 0) throw new Error("RSS returned empty feed");
-
-  setCache(url, data);
-  return data;
-}
-
-// ─── iTunes Search API (confirmed CORS-enabled) ───────────────────────────────
+// ─── iTunes Search API ────────────────────────────────────────────────────────
 
 async function searchItunes<T>(entity: "album" | "song", terms: string[], limitPerTerm: number): Promise<T[]> {
   const results = await Promise.all(
@@ -68,26 +51,40 @@ async function searchItunes<T>(entity: "album" | "song", terms: string[], limitP
   return results.flat();
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── Top Albums ───────────────────────────────────────────────────────────────
+// Primary: Apple Marketing Tools RSS (current CORS-enabled chart)
+// Fallback: iTunes search by chart artists
 
-export async function fetchTopAlbums(limit = 50): Promise<Album[]> {
-  const cacheKey = `charts:albums:${limit}`;
-  const cached = getCache<Album>(cacheKey);
-  if (cached) return cached;
+const AMT_ALBUMS_URL = "https://rss.applemarketingtools.com/api/v2/us/music/most-played/50/albums.json";
 
-  // 1. Try old iTunes RSS (fast, real chart data)
-  try {
-    const raw = await fetchItunesRSS<RawItunesRSSEntry>(`${BASE}/us/rss/topalbums/limit=${limit}/json`);
-    const data = raw
-      .map((e) => { try { return normalizeItunesRSSAlbum(e); } catch { return null; } })
-      .filter(Boolean) as Album[];
-    if (data.length > 0) { setCache(cacheKey, data); return data; }
-  } catch (e) {
-    console.error("[Songify] iTunes RSS albums failed, using search fallback:", e);
+export async function fetchTopAlbums(limit = 50, force = false): Promise<Album[]> {
+  const cacheKey = `charts:albums:v4:${limit}`;
+  if (!force) {
+    const cached = getCache<Album>(cacheKey);
+    if (cached) return cached;
   }
 
-  // 2. Fallback: search API – popular artist names give high-quality recent results
-  const terms = ["taylor swift", "drake", "the weeknd", "sabrina carpenter", "kendrick lamar", "olivia rodrigo", "billie eilish", "bad bunny", "ariana grande", "sza"];
+  // Try Apple Marketing Tools RSS
+  try {
+    const res = await fetch(AMT_ALBUMS_URL);
+    if (res.ok) {
+      const json = await res.json();
+      const results: RawFeedResult[] = json.feed?.results ?? [];
+      if (results.length > 0) {
+        const data = results
+          .slice(0, limit)
+          .map((r) => { try { return normalizeFeedAlbum(r); } catch { return null; } })
+          .filter(Boolean) as Album[];
+        if (data.length > 0) { setCache(cacheKey, data); return data; }
+      }
+    }
+  } catch {}
+
+  // Fallback: search by current chart artists
+  const terms = [
+    "olivia rodrigo", "taylor swift", "drake", "ella langley", "bruno mars",
+    "ariana grande", "olivia dean", "luke combs", "tame impala", "noah kahan",
+  ];
   const perTerm = Math.ceil(limit / terms.length);
   const raw = await searchItunes<RawItunesAlbum>("album", terms, perTerm);
 
@@ -102,67 +99,69 @@ export async function fetchTopAlbums(limit = 50): Promise<Album[]> {
   return data;
 }
 
-// Billboard Hot 100 — Week of July 4, 2026
-// Searched by "title artist" so iTunes returns the exact song with artwork + previewUrl
+// ─── Top Songs (Billboard Hot 100 — Week of July 4, 2026) ────────────────────
+// Each entry is a search term: "title artist" — iTunes returns the exact track.
+
 const BILLBOARD_HOT_100: string[] = [
-  "I Knew It I Knew You Taylor Swift",
   "Choosin Texas Ella Langley",
+  "I Knew It I Knew You Taylor Swift",
+  "Be Her Ella Langley",
   "Stupid Song Olivia Rodrigo",
   "Drop Dead Olivia Rodrigo",
-  "Be Her Ella Langley",
-  "The Cure Olivia Rodrigo",
   "Janice STFU Drake",
   "Hate That I Made You Love Me Ariana Grande",
-  "Honeybee Olivia Rodrigo",
   "Man I Need Olivia Dean",
-  "I Just Might Bruno Mars",
-  "So Easy To Fall In Love Olivia Dean",
   "I Cant Love You Anymore Ella Langley Morgan Wallen",
-  "Begged Olivia Rodrigo",
-  "Dracula Tame Impala",
+  "Dracula Tame Impala JENNIE",
+  "So Easy To Fall In Love Olivia Dean",
+  "I Just Might Bruno Mars",
+  "The Cure Olivia Rodrigo",
   "Boston Stella Lefty",
   "Risk It All Bruno Mars",
-  "Stateside PinkPantheress",
-  "Earrings Malcolm Todd",
-  "Be By You Luke Combs",
-  "Don't We Morgan Wallen",
-  "Cinderella Mac Miller Ty Dolla Sign",
-  "Babydoll Dominic Fike",
-  "Chicago Michael Jackson",
-  "Human Nature Michael Jackson",
-  "Whisper My Name Drake",
-  "American Girls Harry Styles",
-  "Change My Mind Riley Green",
-  "The Great Divide Noah Kahan",
-  "Swim BTS",
-  "Fever Dream Alex Warren",
-  "Hit The Wall Gracie Abrams",
-  "Mexico Honey Kacey Musgraves",
-  "What You Need Tems",
-  "Beautiful Things Megan Moroney",
-  "Dai Dai Shakira Burna Boy",
-  "Willing And Able Noah Kahan",
-  "Woman Kane Brown",
-  "House Tour Sabrina Carpenter",
-  "Phone Keys Wallet Lainey Wilson John Mayer",
-  "Girls Kid LAROI",
-  "Mr Know It All Teddy Swims",
-  "Porch Light Noah Kahan",
-  "Don't Worry Drake",
-  "Rocky Mountain Low Corey Kent Koe Wetzel",
+  "Homewrecker sombr",
+  "Stateside PinkPantheress Zara Larsson",
+  "Honeybee Olivia Rodrigo",
   "Midnight Sun Zara Larsson",
-  "Homewrecker Sombr",
-  "Raindance Dave Tems",
-  "Come Over BTS",
-  "Mcarthur Hardy Morgan Wallen",
+  "Shabang Drake",
+  "Be By You Luke Combs",
+  "Dont We Morgan Wallen",
+  "Earrings Malcolm Todd",
+  "Maggots For Brains Olivia Rodrigo",
+  "Spend Dat Yung Miami",
+  "Cinderella Mac Miller Ty Dolla Sign",
+  "Expectations Olivia Rodrigo",
+  "My Way Olivia Rodrigo",
+  "Babydoll Dominic Fike",
+  "Whats Wrong With Me Olivia Rodrigo Robert Smith",
+  "Begged Olivia Rodrigo",
+  "Sleepless In A Hotel Room Luke Combs",
+  "u me Olivia Rodrigo",
+  "Less Olivia Rodrigo",
+  "Loving Life Again Ella Langley",
+  "Chicago Michael Jackson",
+  "E85 Don Toliver",
+  "American Girls Harry Styles",
+  "Ran To Atlanta Drake Future Molly Santana",
+  "Die On This Hill Sienna Spiro",
+  "Freakin Out Dexter And The Moonrocks",
+  "Pop Dat Thang DaBaby",
+  "Iconic By Mistake Le Sserafim ILLIT KATSEYE",
+  "The Great Divide Noah Kahan",
+  "Human Nature Michael Jackson",
+  "Change My Mind Riley Green",
+  "Dont Tell On Me Jason Aldean",
+  "Whisper My Name Drake",
+  "Hit The Wall Gracie Abrams",
+  "Cigarette Smoke Olivia Rodrigo",
 ];
 
-export async function fetchTopSongs(limit = 50): Promise<Track[]> {
-  const cacheKey = `charts:songs:billboard:${limit}`;
-  const cached = getCache<Track>(cacheKey);
-  if (cached) return cached;
+export async function fetchTopSongs(limit = 50, force = false): Promise<Track[]> {
+  const cacheKey = `charts:songs:billboard:v4:${limit}`;
+  if (!force) {
+    const cached = getCache<Track>(cacheKey);
+    if (cached) return cached;
+  }
 
-  // Search iTunes by exact Billboard title+artist — guarantees real artwork + previewUrl
   const terms = BILLBOARD_HOT_100.slice(0, limit);
   const results = await Promise.all(
     terms.map((term) =>

@@ -17,7 +17,7 @@ const wordVariants: Variants = {
   }),
 };
 
-const HEADLINE = ["The", "latest,", "beautifully."];
+const HEADLINE = ["The", "sound", "of", "now."];
 
 function BrowseIcon() {
   return (
@@ -51,6 +51,8 @@ export function Hero({ featured }: Props) {
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
+    // @ts-ignore -- valid runtime option, not yet in this version's types
+    layoutEffect: false,
   });
 
   const imageY       = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [0, -90]);
@@ -90,7 +92,7 @@ export function Hero({ featured }: Props) {
             Global Charts · Updated Daily
           </motion.p>
 
-          <h1 className="text-display mb-8 overflow-hidden" aria-label="The latest, beautifully.">
+          <h1 className="text-display mb-8 overflow-hidden" aria-label="The sound of now.">
             {HEADLINE.map((word, i) => (
               <motion.span
                 key={word}
@@ -100,9 +102,9 @@ export function Hero({ featured }: Props) {
                 animate="visible"
                 className="inline-block mr-[0.25em]"
               >
-                {i === 2 ? (
+                {i === 3 ? (
                   <span>
-                    beautifully
+                    now
                     <span className="text-pop">.</span>
                   </span>
                 ) : word}

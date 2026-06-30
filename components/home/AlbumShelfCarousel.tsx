@@ -41,6 +41,8 @@ export function AlbumShelfCarousel({ albums }: Props) {
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
+    // @ts-ignore -- valid runtime option, not yet in this version's types
+    layoutEffect: false,
   });
   const sectionY = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [30, -30]);
 
@@ -52,11 +54,8 @@ export function AlbumShelfCarousel({ albums }: Props) {
   const shelf = withArtwork.slice(0, 15);
 
   return (
-    <motion.section
-      ref={sectionRef}
-      style={{ y: sectionY }}
-      className="py-20 border-t border-hairline overflow-hidden"
-    >
+    <section ref={sectionRef} className="border-t border-hairline overflow-hidden">
+      <motion.div style={{ y: sectionY }} className="py-20">
       <div className="max-w-7xl mx-auto px-6 mb-8">
         <Reveal direction="up">
           <p className="text-eyebrow text-ink-soft mb-2">Featured shelf</p>
@@ -129,6 +128,7 @@ export function AlbumShelfCarousel({ albums }: Props) {
           })}
         </div>
       </div>
-    </motion.section>
+      </motion.div>
+    </section>
   );
 }

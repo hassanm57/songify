@@ -14,6 +14,8 @@ export function ShowcaseGrid({ albums }: Props) {
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "center center"],
+    // @ts-ignore -- valid runtime option, not yet in this version's types
+    layoutEffect: false,
   });
 
   const headerY = useTransform(scrollYProgress, [0, 1], shouldReduce ? [0, 0] : [40, 0]);

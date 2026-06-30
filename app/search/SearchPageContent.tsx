@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearch } from "@/lib/hooks/useSearch";
 import { TrackRow } from "@/components/cards/TrackRow";
@@ -13,20 +13,31 @@ import { cn } from "@/lib/utils";
 type Tab = "songs" | "albums" | "artists";
 
 export function SearchPageContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const initialQ = searchParams.get("q") ?? "";
-  const [query, setQuery] = useState(initialQ);
+  // Start empty to match pre-rendered HTML (avoids hydration mismatch).
+  // A mount effect immediately populates from window.location.search, which
+  // is always correct on the client — no timing race with useSearchParams().
+  const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Tab>("songs");
-  const { tracks, albums, artists, loading } = useSearch(query);
 
   useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q") ?? "";
+    if (q) setQuery(q);
+  }, []); // intentionally runs only once on mount
+
+  // Keep URL in sync as the user types, but NEVER replace if query is empty —
+  // that would clobber the ?q= that OrbSearch already put in the URL.
+  useEffect(() => {
+    if (!query) return;
+    const current = new URLSearchParams(window.location.search).get("q") ?? "";
+    if (query === current) return; // already in sync, skip the replace
     const t = setTimeout(() => {
-      const params = new URLSearchParams(query ? { q: query } : {});
-      router.replace(`/search${query ? `?${params}` : ""}`, { scroll: false });
-    }, 400);
+      router.replace(`/search?q=${encodeURIComponent(query)}`, { scroll: false });
+    }, 500);
     return () => clearTimeout(t);
   }, [query, router]);
+
+  const { tracks, albums, artists, loading, error } = useSearch(query);
 
   const tabCounts: Record<Tab, number> = {
     songs: tracks.length,
@@ -37,7 +48,6 @@ export function SearchPageContent() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
-      {/* Header */}
       <div className="mb-6">
         <p className="text-eyebrow text-ink-soft mb-1">Find music</p>
         <h1 className="text-h2">Search</h1>
@@ -89,7 +99,7 @@ export function SearchPageContent() {
               )}
               {tab === t && (
                 <motion.div
-                  layoutId="search-page-tab-indicator"
+                  layoutId="search-tab-indicator"
                   className="absolute bottom-0 left-0 right-0 h-0.5 bg-pop rounded-full"
                 />
               )}
@@ -102,7 +112,7 @@ export function SearchPageContent() {
       <AnimatePresence mode="wait">
         {!query.trim() ? (
           <motion.div
-            key="empty-prompt"
+            key="empty"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -112,21 +122,25 @@ export function SearchPageContent() {
           </motion.div>
         ) : loading ? (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            {tab !== "artists" ? (
-              tab === "songs" ? (
-                <div className="border border-hairline rounded-xl overflow-hidden">
-                  {Array.from({ length: 8 }).map((_, i) => <TrackSkeleton key={i} />)}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {Array.from({ length: 10 }).map((_, i) => <CardSkeleton key={i} />)}
-                </div>
-              )
+            {tab === "songs" ? (
+              <div className="border border-hairline rounded-xl overflow-hidden">
+                {Array.from({ length: 8 }).map((_, i) => <TrackSkeleton key={i} />)}
+              </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)}
+                {Array.from({ length: 10 }).map((_, i) => <CardSkeleton key={i} />)}
               </div>
             )}
+          </motion.div>
+        ) : error ? (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="py-20 text-center"
+          >
+            <p className="text-ink-soft text-sm">Something went wrong. Try again.</p>
           </motion.div>
         ) : !hasResults ? (
           <motion.div
@@ -203,7 +217,7 @@ export function SearchPageContent() {
             exit={{ opacity: 0 }}
             className="py-12 text-center"
           >
-            <p className="text-ink-soft text-sm">No {tab} found for "{query}"</p>
+            <p className="text-ink-soft text-sm">No {tab} for "{query}"</p>
           </motion.div>
         )}
       </AnimatePresence>

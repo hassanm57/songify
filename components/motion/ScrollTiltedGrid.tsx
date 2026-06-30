@@ -70,6 +70,8 @@ function Tile({ src, href, side, config }: { src: string; href?: string; side: S
   const { scrollYProgress: p } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
+    // @ts-ignore -- valid runtime option, not yet in this version's types
+    layoutEffect: false,
   });
 
   const reduce = useReducedMotion();
@@ -118,10 +120,12 @@ function Tile({ src, href, side, config }: { src: string; href?: string; side: S
     );
   }
 
+  // Use a plain <figure> so React sets ref.current synchronously at commit —
+  // motion.figure defers ref population, breaking useScroll's target check.
   return (
-    <motion.figure ref={ref} className="relative z-10 m-0" style={{ perspective, willChange: "transform" }}>
+    <figure ref={ref} className="relative z-10 m-0" style={{ perspective: `${perspective}px`, willChange: "transform" }}>
       {href ? <Link href={href} className="block">{animatedInner}</Link> : animatedInner}
-    </motion.figure>
+    </figure>
   );
 }
 
