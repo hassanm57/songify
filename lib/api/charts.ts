@@ -13,6 +13,13 @@ const BASE = "https://itunes.apple.com";
 const memCache = new Map<string, { data: unknown; ts: number }>();
 const TTL = 5 * 60 * 1000;
 
+async function resolveOne<T>(term: string, entity: "album" | "song"): Promise<T | null> {
+  return queuedFetch(`${BASE}/search?term=${encodeURIComponent(term)}&media=music&entity=${entity}&limit=1&country=us`, { priority: "low" })
+    .then((r) => r.json())
+    .then((j) => (j.results?.[0] ?? null) as T | null)
+    .catch(() => null);
+}
+
 // ─── Cache helpers ────────────────────────────────────────────────────────────
 
 function getCache<T>(key: string): T[] | null {
@@ -38,32 +45,69 @@ function setCache(key: string, data: unknown) {
   }
 }
 
-// ─── iTunes Search API ────────────────────────────────────────────────────────
-
-async function searchItunes<T>(entity: "album" | "song", terms: string[], limitPerTerm: number): Promise<T[]> {
-  // "low" priority + shared queue: this fires one request per term (up to
-  // 50), which used to go out all at once and blow past Apple's rate limit
-  // within ~1.5s of page load, starving real user searches. Routing through
-  // the queue caps how many are ever in flight and lets user searches cut in.
-  const results = await Promise.all(
-    terms.map((t) =>
-      queuedFetch(`${BASE}/search?term=${encodeURIComponent(t)}&media=music&entity=${entity}&limit=${limitPerTerm}&country=us`, { priority: "low" })
-        .then((r) => r.json())
-        .then((j) => (j.results ?? []) as T[])
-        .catch(() => [] as T[])
-    )
-  );
-  return results.flat();
-}
-
 // ─── Top Albums ───────────────────────────────────────────────────────────────
 // Primary: Apple Marketing Tools RSS (current CORS-enabled chart)
-// Fallback: iTunes search by chart artists
+// Fallback: Billboard 200 (Week of July 4, 2026) — each entry is a
+// "title artist" search term, so we resolve the exact charting album
+// instead of just the artist's top iTunes hit.
 
 const AMT_ALBUMS_URL = "https://rss.applemarketingtools.com/api/v2/us/music/most-played/50/albums.json";
 
+const BILLBOARD_200: string[] = [
+  "you seem pretty sad for a girl so in love Olivia Rodrigo",
+  "ICEMAN Drake",
+  "Dandelion Ella Langley",
+  "I'm The Problem Morgan Wallen",
+  "The Great Divide Noah Kahan",
+  "Thriller Michael Jackson",
+  "Number Ones Michael Jackson",
+  "One Thing At A Time Morgan Wallen",
+  "The Art Of Loving Olivia Dean",
+  "ARIRANG BTS",
+  "Debi Tirar Mas Fotos Bad Bunny",
+  "Stick Season Noah Kahan",
+  "Octane Don Toliver",
+  "Dangerous The Double Album Morgan Wallen",
+  "SOS SZA",
+  "KPop Demon Hunters Soundtrack",
+  "The Diamond Collection Post Malone",
+  "The Life Of A Showgirl Taylor Swift",
+  "Rumours Fleetwood Mac",
+  "Hungover Ella Langley",
+  "You'll Be Alright, Kid Alex Warren",
+  "Brown Chris Brown",
+  "The Way I Am Luke Combs",
+  "30 Number One Hits Jason Aldean",
+  "Greatest Hits Queen",
+  "Take Care Drake",
+  "HABIBTI Drake",
+  "Bully Ye",
+  "Project X Key Glock",
+  "Diamonds Elton John",
+  "Chronicle The 20 Greatest Hits Creedence Clearwater Revival",
+  "Man's Best Friend Sabrina Carpenter",
+  "Sour Olivia Rodrigo",
+  "Un Verano Sin Ti Bad Bunny",
+  "Eternal Sunshine Ariana Grande",
+  "Short n' Sweet Sabrina Carpenter",
+  "Is This Heaven Stella Lefty",
+  "Sweet Boy Malcolm Todd",
+  "Guts Olivia Rodrigo",
+  "Swag Justin Bieber",
+  "The Romantic Bruno Mars",
+  "Teenage Dream Katy Perry",
+  "Ugly Is Beautiful Oliver Tree",
+  "35 Biggest Hits Toby Keith",
+  "Dont Mind If I Do Riley Green",
+  "Views Drake",
+  "So Close To What Tate McRae",
+  "The Best Of Nickelback Volume 1 Nickelback",
+  "Greatest Hits Tom Petty And The Heartbreakers",
+  "Nevermind Nirvana",
+];
+
 export async function fetchTopAlbums(limit = 50, force = false): Promise<Album[]> {
-  const cacheKey = `charts:albums:v4:${limit}`;
+  const cacheKey = `charts:albums:billboard:v5:${limit}`;
   if (!force) {
     const cached = getCache<Album>(cacheKey);
     if (cached) return cached;
@@ -85,22 +129,19 @@ export async function fetchTopAlbums(limit = 50, force = false): Promise<Album[]
     }
   } catch {}
 
-  // Fallback: search by current chart artists
-  const terms = [
-    "olivia rodrigo", "taylor swift", "drake", "ella langley", "bruno mars",
-    "ariana grande", "olivia dean", "luke combs", "tame impala", "noah kahan",
-  ];
-  const perTerm = Math.ceil(limit / terms.length);
-  const raw = await searchItunes<RawItunesAlbum>("album", terms, perTerm);
+  // Fallback: resolve the real Billboard 200 chart, one title at a time
+  const terms = BILLBOARD_200.slice(0, limit);
+  const results = await Promise.all(terms.map((term) => resolveOne<RawItunesAlbum>(term, "album")));
 
   const seen = new Set<number>();
-  const data = raw
-    .map((r) => { try { return normalizeAlbum(r); } catch { return null; } })
+  const data = results
+    .filter(Boolean)
+    .map((r) => { try { return normalizeAlbum(r!); } catch { return null; } })
     .filter(Boolean)
     .filter((a) => { if (!a || seen.has(a.id)) return false; seen.add(a.id); return true; })
     .slice(0, limit) as Album[];
 
-  setCache(cacheKey, data);
+  if (data.length > 0) setCache(cacheKey, data);
   return data;
 }
 
@@ -168,14 +209,7 @@ export async function fetchTopSongs(limit = 50, force = false): Promise<Track[]>
   }
 
   const terms = BILLBOARD_HOT_100.slice(0, limit);
-  const results = await Promise.all(
-    terms.map((term) =>
-      queuedFetch(`${BASE}/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=1&country=us`, { priority: "low" })
-        .then((r) => r.json())
-        .then((j) => (j.results?.[0] ?? null) as RawItunesTrack | null)
-        .catch(() => null)
-    )
-  );
+  const results = await Promise.all(terms.map((term) => resolveOne<RawItunesTrack>(term, "song")));
 
   const seen = new Set<number>();
   const data = results
