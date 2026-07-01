@@ -7,6 +7,7 @@ import {
   type RawItunesAlbum,
   type RawItunesArtist,
 } from "@/lib/normalize";
+import { queuedFetch } from "@/lib/api/requestQueue";
 
 const BASE = "https://itunes.apple.com";
 
@@ -30,7 +31,10 @@ async function fetchItunes<T>(url: string): Promise<T[]> {
     } catch {}
   }
 
-  const res = await fetch(url);
+  // "high" priority: these calls are directly triggered by user actions
+  // (search, opening a detail page, buying/playing), so they should jump
+  // ahead of background chart/decorative enrichment in the shared queue.
+  const res = await queuedFetch(url, { priority: "high" });
   if (!res.ok) throw new Error(`iTunes fetch failed: ${res.status}`);
   const json = await res.json();
   const data: T[] = json.results ?? [];

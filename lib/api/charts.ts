@@ -7,6 +7,7 @@ import {
   type RawItunesAlbum,
   type RawItunesTrack,
 } from "@/lib/normalize";
+import { queuedFetch } from "@/lib/api/requestQueue";
 
 const BASE = "https://itunes.apple.com";
 const memCache = new Map<string, { data: unknown; ts: number }>();
@@ -40,9 +41,13 @@ function setCache(key: string, data: unknown) {
 // ─── iTunes Search API ────────────────────────────────────────────────────────
 
 async function searchItunes<T>(entity: "album" | "song", terms: string[], limitPerTerm: number): Promise<T[]> {
+  // "low" priority + shared queue: this fires one request per term (up to
+  // 50), which used to go out all at once and blow past Apple's rate limit
+  // within ~1.5s of page load, starving real user searches. Routing through
+  // the queue caps how many are ever in flight and lets user searches cut in.
   const results = await Promise.all(
     terms.map((t) =>
-      fetch(`${BASE}/search?term=${encodeURIComponent(t)}&media=music&entity=${entity}&limit=${limitPerTerm}&country=us`)
+      queuedFetch(`${BASE}/search?term=${encodeURIComponent(t)}&media=music&entity=${entity}&limit=${limitPerTerm}&country=us`, { priority: "low" })
         .then((r) => r.json())
         .then((j) => (j.results ?? []) as T[])
         .catch(() => [] as T[])
@@ -165,7 +170,7 @@ export async function fetchTopSongs(limit = 50, force = false): Promise<Track[]>
   const terms = BILLBOARD_HOT_100.slice(0, limit);
   const results = await Promise.all(
     terms.map((term) =>
-      fetch(`${BASE}/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=1&country=us`)
+      queuedFetch(`${BASE}/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=1&country=us`, { priority: "low" })
         .then((r) => r.json())
         .then((j) => (j.results?.[0] ?? null) as RawItunesTrack | null)
         .catch(() => null)

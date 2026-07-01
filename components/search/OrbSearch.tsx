@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { queuedFetch } from "@/lib/api/requestQueue";
 
 // Billboard Hot 100 — Week of July 4, 2026
 type Song = { title: string; artist: string };
@@ -141,9 +142,9 @@ export function OrbSearch({ className }: Props) {
     const controller = new AbortController();
     const term       = encodeURIComponent(`${song.title} ${song.artist}`);
 
-    fetch(
+    queuedFetch(
       `https://itunes.apple.com/search?term=${term}&entity=song&limit=1`,
-      { signal: controller.signal }
+      { signal: controller.signal, priority: "low" }
     )
       .then((r) => r.json())
       .then((j) => {

@@ -1,6 +1,7 @@
 import type { Album, Track } from "@/types";
 import { normalizeAlbum, normalizeTrack, type RawItunesAlbum, type RawItunesTrack } from "@/lib/normalize";
 import type { Genre } from "@/lib/genres";
+import { queuedFetch } from "@/lib/api/requestQueue";
 
 const BASE = "https://itunes.apple.com";
 const memCache = new Map<string, { data: unknown; ts: number }>();
@@ -46,8 +47,9 @@ function setCache(key: string, data: unknown) {
 
 async function searchOne<T>(term: string, entity: "song" | "album", limit: number): Promise<T[]> {
   try {
-    const res = await fetch(
-      `${BASE}/search?term=${encodeURIComponent(term)}&media=music&entity=${entity}&limit=${limit}&country=us`
+    const res = await queuedFetch(
+      `${BASE}/search?term=${encodeURIComponent(term)}&media=music&entity=${entity}&limit=${limit}&country=us`,
+      { priority: "low" }
     );
     const json = await res.json();
     return (json.results ?? []) as T[];
