@@ -1,6 +1,7 @@
 <div align="center">
 
-<img src="docs/screenshots/hero-light.png" alt="Songify — hero" width="100%" />
+<img width="1465" height="836" alt="image" src="https://github.com/user-attachments/assets/1216d746-6517-448d-bfd0-30a8b9802e27" />
+
 
 # Songify
 
