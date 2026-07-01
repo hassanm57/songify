@@ -1,6 +1,15 @@
 <div align="center">
 
 <img width="1465" height="836" alt="image" src="https://github.com/user-attachments/assets/1216d746-6517-448d-bfd0-30a8b9802e27" />
+<img width="1468" height="830" alt="image" src="https://github.com/user-attachments/assets/46689473-a2e4-45ca-911f-d83ce88fbd51" />
+<img width="1463" height="826" alt="image" src="https://github.com/user-attachments/assets/b6bc9fc2-db2c-4371-aea2-dfaa1493d920" />
+<img width="1470" height="829" alt="image" src="https://github.com/user-attachments/assets/dc607ca0-52ef-409c-8f75-9881871a726c" />
+<img width="1450" height="825" alt="image" src="https://github.com/user-attachments/assets/f1ac17e0-726b-4fa9-85f6-5d6ba5b944cb" />
+<img width="1460" height="829" alt="image" src="https://github.com/user-attachments/assets/b55bf4c9-3e75-444c-a492-5919f0450fcc" />
+
+
+
+
 
 
 # Songify
@@ -41,41 +50,6 @@ It exists to demonstrate **production-grade frontend engineering** in a project 
 - **Favorites** — heart-toggle on any card or row, persisted to `localStorage`, with its own dedicated page and animated empty state
 - **Dark mode** — manual toggle, `localStorage`-persisted, zero flash-of-wrong-theme on load
 - **Fully responsive & accessible** — keyboard-operable controls, visible focus rings, labeled audio controls, and `prefers-reduced-motion` respected across every animation in the app
-
-<br />
-
-## 🖼 Screenshots
-
-<table>
-<tr>
-<td width="50%">
-
-**Dark mode**
-<img src="docs/screenshots/hero-dark.png" alt="Dark mode hero" width="100%" />
-
-</td>
-<td width="50%">
-
-**⌘K search**
-<img src="docs/screenshots/search-overlay.png" alt="Command palette search" width="100%" />
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-**Live chart rails**
-<img src="docs/screenshots/rails-light.png" alt="Top Songs rail with live data" width="100%" />
-
-</td>
-<td width="50%">
-
-**Browse by genre**
-<img src="docs/screenshots/browse-grid.png" alt="Genre browse grid" width="100%" />
-
-</td>
-</tr>
-</table>
 
 <br />
 
